@@ -24,4 +24,5 @@ def operation(action, video):
         cv2.imwrite(str(output), frame)
 
 
-utils.iterate(mask_path, operation, extension=".mat")
+if __name__ == "__main__":
+    utils.iterate(mask_path, operation, extension=".mat")
