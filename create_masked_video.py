@@ -31,7 +31,7 @@ def operation(action, video):
     for i, frame in enumerate(frames):
         if i < n_mask_frames:
             mask = masks[..., i] if actor else 1 - masks[..., i]
-            mask = cv2.dilate(mask, dilation_kernel, iterations=3)
+            mask = cv2.dilate(mask, dilation_kernel, iterations=4)
             masked = cv2.bitwise_and(frame, frame, mask=mask)
 
             output_frames.append(masked)
