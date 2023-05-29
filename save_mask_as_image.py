@@ -2,15 +2,15 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+import utils
 from scipy.io import loadmat
-from utils import count_files, iterate
 
 output_path = Path("/nas.dbms/randy/datasets/jhmdb-mask")
 mask_path = Path("/nas.dbms/randy/projects/jhmdb-scripts/mask-annotations")
-n_mat = count_files(mask_path, recursive=True, extension="mat")
+n_mat = utils.count_files(mask_path, recursive=True, extension=".mat")
 
 
-def op(action, video):
+def operation(action, video):
     mat = loadmat(video / "puppet_mask.mat")
     mask = np.array(mat["part_mask"])
     n_frames = mask.shape[-1]
@@ -24,4 +24,4 @@ def op(action, video):
         cv2.imwrite(str(output), frame)
 
 
-iterate(mask_path, op, extension="mat")
+utils.iterate(mask_path, operation, extension=".mat")
