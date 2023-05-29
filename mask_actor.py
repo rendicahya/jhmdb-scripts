@@ -2,51 +2,41 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from moviepy.editor import ImageSequenceClip
+import utils
+from moviepy.editor import ImageSequenceClip, VideoFileClip
 from scipy.io import loadmat
 
-dataset_path = Path("/nas.dbms/randy/datasets/jhmdb")
-output_path = Path("/nas.dbms/randy/datasets/jhmdb-mask")
+input_path = Path("/nas.dbms/randy/datasets/jhmdb")
+output_path = Path("/nas.dbms/randy/datasets/jhmdb-masked")
 mask_path = Path("/nas.dbms/randy/projects/jhmdb-scripts/mask-annotations")
-n_mat = sum(
-    1 for f in mask_path.glob("**/*") if f.is_file() and f.name.endswith(".mat")
-)
+n_mat = utils.count_files(mask_path, extension="mat")
 
-for action in mask_path.iterdir():
-    for video_name in action.iterdir():
-        mat = loadmat(video_name / "puppet_mask.mat")
-        mask = np.array(mat["part_mask"])
-        output_frames = []
 
-        input_video_path = dataset_path / action.name / (video_name.name + ".avi")
-        output_video_path = output_path / action.name / (video_name.name + ".mp4")
+def operation(action, video):
+    mat = loadmat(video / "puppet_mask.mat")
+    masks = np.array(mat["part_mask"])
+    output_frames = []
 
-        output_video_path.parent.mkdir(parents=True, exist_ok=True)
+    input_video_path = input_path / action.name / (video.name + ".avi")
+    output_video_path = output_path / action.name / (video.name + ".mp4")
 
-        cap = cv2.VideoCapture(str(input_video_path))
-        fps = float(cap.get(cv2.CAP_PROP_FPS))
-        frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    output_video_path.parent.mkdir(parents=True, exist_ok=True)
 
-        frame_idx = 0
-        n_frames_in_mask = mask.shape[-1]
+    clip = VideoFileClip(str(input_video_path))
+    frames = clip.iter_frames()
+    n_mask_frames = masks.shape[-1]
 
-        while cap.isOpened():
-            ret, frame = cap.read()
+    for i, frame in enumerate(frames):
+        if i < n_mask_frames:
+            mask = masks[..., i]
+            masked = cv2.bitwise_and(frame, frame, mask=mask)
 
-            if frame_idx < n_frames_in_mask:
-                frame_mask = mask[:, :, frame_idx]
-                masked_frame = cv2.bitwise_and(frame, frame, mask=frame_mask)
-                masked_frame = cv2.cvtColor(masked_frame, cv2.COLOR_BGR2RGB)
+            output_frames.append(masked)
 
-                output_frames.append(masked_frame)
+    if len(output_frames) > 0:
+        clip = ImageSequenceClip(output_frames, fps=clip.fps)
+        clip.write_videofile(str(output_video_path), audio=False)
 
-            frame_idx += 1
 
-            if not ret:
-                break
-
-        if len(output_frames) > 0:
-            clip = ImageSequenceClip(output_frames, fps=fps)
-            clip.write_videofile(str(output_video_path), audio=False)
+if __name__ == "__main__":
+    utils.iterate(mask_path, operation, progress_bar=False)
