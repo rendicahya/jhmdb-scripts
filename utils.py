@@ -1,17 +1,20 @@
+from contextlib import nullcontext
 from pathlib import Path
 
 from tqdm import tqdm
 
 
-def iterate(path: Path, op, extension=None):
+def iterate(path: Path, operation, extension=None, progress_bar=True):
     n_files = count_files(path, recursive=True, extension=extension)
 
-    with tqdm(total=n_files) as bar:
+    with tqdm(total=n_files) if progress_bar else nullcontext() as bar:
         for action in path.iterdir():
             for video in action.iterdir():
-                bar.set_description(video.name[:30])
-                op(action, video)
-                bar.update(1)
+                if progress_bar:
+                    bar.set_description(video.name[:30])
+                    bar.update(1)
+
+                operation(action, video)
 
 
 def count_files(path: Path, recursive=False, extension=None):
@@ -19,7 +22,7 @@ def count_files(path: Path, recursive=False, extension=None):
     filter = (
         (lambda f: f.is_file())
         if extension is None
-        else (lambda f: f.is_file() and f.suffix == f".{extension}")
+        else (lambda f: f.is_file() and f.suffix == extension)
     )
 
     return sum(1 for f in path.glob(pattern) if filter(f))
