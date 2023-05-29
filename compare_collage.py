@@ -4,8 +4,8 @@ import numpy as np
 from moviepy.editor import VideoFileClip, clips_array, concatenate_videoclips
 
 dataset_path = Path("/nas.dbms/randy/datasets/jhmdb")
-output_path = Path("/nas.dbms/randy/datasets/jhmdb-masked-collage")
-masked_path = Path("/nas.dbms/randy/datasets/jhmdb-masked")
+output_path = Path("/nas.dbms/randy/datasets/jhmdb-masked-scene-collage")
+masked_path = Path("/nas.dbms/randy/datasets/jhmdb-masked-scene")
 
 output_path.mkdir(parents=True, exist_ok=True)
 
