@@ -7,9 +7,10 @@ from moviepy.editor import ImageSequenceClip, VideoFileClip
 from scipy.io import loadmat
 
 input_path = Path("/nas.dbms/randy/datasets/jhmdb")
-output_path = Path("/nas.dbms/randy/datasets/jhmdb-masked")
+output_path = Path("/nas.dbms/randy/datasets/jhmdb-masked-scene")
 mask_path = Path("/nas.dbms/randy/projects/jhmdb-scripts/mask-annotations")
 n_mat = utils.count_files(mask_path, extension="mat")
+actor = False
 
 
 def operation(action, video):
@@ -28,7 +29,7 @@ def operation(action, video):
 
     for i, frame in enumerate(frames):
         if i < n_mask_frames:
-            mask = masks[..., i]
+            mask = masks[..., i] if actor else 1 - masks[..., i]
             masked = cv2.bitwise_and(frame, frame, mask=mask)
 
             output_frames.append(masked)
