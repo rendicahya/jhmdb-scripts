@@ -4,19 +4,21 @@ import numpy as np
 from moviepy.editor import VideoFileClip, clips_array, concatenate_videoclips
 
 dataset_path = Path("/nas.dbms/randy/datasets/jhmdb")
-output_path = Path("/nas.dbms/randy/datasets/jhmdb-mask-scene-collage")
-masked_dataset_path = Path("/nas.dbms/randy/datasets/jhmdb-mask-scene")
+output_path = Path("/nas.dbms/randy/datasets/jhmdb-masked-collage")
+masked_path = Path("/nas.dbms/randy/datasets/jhmdb-masked")
 
-for action in masked_dataset_path.iterdir():
+output_path.mkdir(parents=True, exist_ok=True)
+
+for action in masked_path.iterdir():
     count = 0
     clips = []
     pairs = []
 
-    for masked_video in action.iterdir():
-        orig_video = dataset_path / action.name / masked_video.name
+    for masked in action.iterdir():
+        orig_video = dataset_path / action.name / masked.with_suffix(".avi").name
         count += 1
 
-        pairs.append([VideoFileClip(str(orig_video)), VideoFileClip(str(masked_video))])
+        pairs.append([VideoFileClip(str(orig_video)), VideoFileClip(str(masked))])
 
         if count % 3 == 0:
             clip = np.array(pairs).T
